@@ -2,17 +2,14 @@ require "class_lister/version"
 
 module ClassLister
   class << self
-    def list(mod)
-      list_all(mod).flatten.select { |c| c.is_a? Class }
-    end
+    def list(mod, filter = true)
+      return [] unless mod.respond_to?(:constants)
 
-    def list_all(mod)
-      mod.constants.map do |c|
-        const = mod.const_get c
-        [const] + ClassLister.list_all(const)
-      end
-    rescue
-      []
+      mod.constants.inject([]) do |collection, name|
+        const = mod.const_get name
+        collection << const
+        collection += list const, false
+      end.tap { |c| c.select! { |c| c.is_a? Class } if filter }
     end
   end
 end
